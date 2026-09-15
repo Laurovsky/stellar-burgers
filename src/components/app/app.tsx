@@ -5,6 +5,9 @@ import styles from './app.module.css';
 import { AppHeader, IngredientDetails, Modal, OrderInfo, ProtectedRoute } from '@components';
 import { Preloader } from '@ui';
 import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from '../../services/store';
+import { useEffect } from 'react';
+import { getIngredientsThunk, selectIngredients, selectIngredientsError, selectIngredientsLoading } from '../../services/slices/ingredientsSlice';
 
 
 const App = () => {
@@ -12,10 +15,26 @@ const App = () => {
   const backgroundLocation = location.state?.backgroundLocation;
 
   const navigate = useNavigate();
-
   const handleCloseModal = () => {
     navigate(-1);
   };
+
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(getIngredientsThunk());
+  }, [dispatch])
+
+  const isLoading = useSelector(selectIngredientsLoading);
+  const error = useSelector(selectIngredientsError);
+  const ingredients = useSelector(selectIngredients);
+
+  if (isLoading) {
+    return <Preloader />
+  }
+
+  if (error) {
+    return <div>{error}</div>
+  }
 
   return (
       <div className={styles.app}>
