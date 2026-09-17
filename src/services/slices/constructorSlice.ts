@@ -26,9 +26,9 @@ export const constructorSlice = createSlice({
 })
 
 export const selectBun = (state: RootState) =>
-    state.constructor.bun
+    state.burgerConstructor.bun
 export const selectConstructorIngredients = (state: RootState) =>
-    state.constructor.ingredients
+    state.burgerConstructor.ingredients
 
 export const { setBun, addIngredients } = constructorSlice.actions;
 export default constructorSlice.reducer

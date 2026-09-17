@@ -1,7 +1,7 @@
 import { FC, useMemo } from 'react';
 import { TConstructorIngredient } from '@utils-types';
 import { BurgerConstructorUI } from '@ui';
-import { useSelector } from 'src/services/store';
+import { useSelector } from '../../services/store';
 import { selectBun, selectConstructorIngredients } from '../../services/slices/constructorSlice';
 
 export const BurgerConstructor: FC = () => {
