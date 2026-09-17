@@ -1,21 +1,30 @@
-import { FC, useMemo } from 'react';
+import { FC, useEffect, useMemo } from 'react';
 import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
+import { useDispatch, useSelector } from '../../services/store';
+import { getOrderByNumberThunk, selectOrderDetail, selectOrderDetailError, selectOrderDetailIsLoading } from '../../services/slices/orderDetailsSlice';
+import { selectIngredients } from '../../services/slices/ingredientsSlice';
+import { useParams } from 'react-router-dom';
 
 export const OrderInfo: FC = () => {
-  /** TODO: взять переменные orderData и ingredients из стора */
-  const orderData = {
-    createdAt: '',
-    ingredients: [],
-    _id: '',
-    status: '',
-    name: '',
-    updatedAt: 'string',
-    number: 0
-  };
+  const { number } = useParams();
+  const dispatch = useDispatch();
 
-  const ingredients: TIngredient[] = [];
+  const orderData =  useSelector(selectOrderDetail);
+  const ingredients = useSelector(selectIngredients);
+  const isLoading = useSelector(selectOrderDetailIsLoading);
+  const error = useSelector(selectOrderDetailError);
+
+  const orderNumber = Number(number);
+
+  useEffect(() => {
+    if (!Number.isInteger(orderNumber) || orderNumber <= 0) {
+      return;
+    };
+    
+    dispatch(getOrderByNumberThunk(orderNumber));
+  },[orderNumber, dispatch])
 
   /* Готовим данные для отображения */
   const orderInfo = useMemo(() => {
@@ -58,6 +67,18 @@ export const OrderInfo: FC = () => {
       total
     };
   }, [orderData, ingredients]);
+
+  if (!Number.isInteger(orderNumber) || orderNumber <= 0) {
+    return <div>Некорректный номер заказа</div>;
+  };
+
+  if (isLoading) {
+    return <Preloader />;
+  }
+
+  if (error) {
+    return <div>{error}</div>
+  }
 
   if (!orderInfo) {
     return <Preloader />;
