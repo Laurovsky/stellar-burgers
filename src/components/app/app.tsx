@@ -29,6 +29,8 @@ import {
   selectIngredientsError,
   selectIngredientsLoading
 } from '../../services/slices/ingredientsSlice';
+import { getUserThunk } from '../../services/slices/userSlice';
+import { getCookie } from '../../utils/cookie';
 
 const App = () => {
   const location = useLocation();
@@ -42,7 +44,12 @@ const App = () => {
   const dispatch = useDispatch();
   useEffect(() => {
     dispatch(getIngredientsThunk());
+
+    if (getCookie('accessToken')) {
+      dispatch(getUserThunk());
+    }
   }, [dispatch]);
+  
 
   const isLoading = useSelector(selectIngredientsLoading);
   const error = useSelector(selectIngredientsError);
