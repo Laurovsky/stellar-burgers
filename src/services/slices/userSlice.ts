@@ -1,4 +1,11 @@
-import { getUserApi, TRegisterData, updateUserApi } from '@api';
+import {
+  getUserApi,
+  loginUserApi,
+  refreshToken,
+  TLoginData,
+  TRegisterData,
+  updateUserApi
+} from '@api';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { TUser } from '@utils-types';
 import type { RootState } from '../store';
@@ -7,16 +14,22 @@ type UserState = {
   user: TUser | null;
   isLoading: boolean;
   isUpdating: boolean;
+  refreshToken: string | null;
+  accessToken: string | null;
   loadError: string | null;
   updateError: string | null;
+  loginError: string | null;
 };
 
 const initialState: UserState = {
   user: null,
   isLoading: false,
   isUpdating: false,
+  refreshToken: null,
+  accessToken: null,
   loadError: null,
-  updateError: null
+  updateError: null,
+  loginError: null,
 };
 
 export const getUserThunk = createAsyncThunk('user/getUser', () =>
@@ -26,6 +39,11 @@ export const getUserThunk = createAsyncThunk('user/getUser', () =>
 export const updateUserThunk = createAsyncThunk(
   'user/updateUser',
   (user: Partial<TRegisterData>) => updateUserApi(user)
+);
+
+export const loginUserThunk = createAsyncThunk(
+  'user/loginUser',
+  (data: TLoginData) => loginUserApi(data)
 );
 
 const userSlice = createSlice({
@@ -59,6 +77,20 @@ const userSlice = createSlice({
       state.isUpdating = false;
       state.updateError = action.error.message || 'Не удалось обновить профиль';
     });
+    builder.addCase(loginUserThunk.pending, (state) => {
+      state.isLoading = true;
+      state.loginError = null;
+    });
+    builder.addCase(loginUserThunk.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
+        state.isLoading = false;
+    });
+    builder.addCase(loginUserThunk.rejected, (state, action) => {
+        state.isLoading = false;
+        state.loginError = action.error.message || 'Ошибка авторизации';
+    });
   }
 });
 
@@ -70,6 +102,7 @@ export const selectUserIsUpdating = (state: RootState) => state.user.isUpdating;
 
 export const selectUserError = (state: RootState) => state.user.loadError;
 
-export const selectUpdateUserError = (state: RootState) => state.user.updateError;
+export const selectUpdateUserError = (state: RootState) =>
+  state.user.updateError;
 
 export default userSlice.reducer;
