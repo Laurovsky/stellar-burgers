@@ -1,6 +1,7 @@
 import {
   getUserApi,
   loginUserApi,
+  logoutApi,
   registerUserApi,
   TLoginData,
   TRegisterData,
@@ -9,8 +10,7 @@ import {
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { TUser } from '@utils-types';
 import type { RootState } from '../store';
-import { setCookie } from '../../utils/cookie';
-import { Root } from 'react-dom/client';
+import { deleteCookie, setCookie } from '../../utils/cookie';
 
 type UserState = {
   user: TUser | null;
@@ -33,7 +33,7 @@ const initialState: UserState = {
   loadError: null,
   updateError: null,
   loginError: null,
-  registerError: null,
+  registerError: null
 };
 
 export const getUserThunk = createAsyncThunk('user/getUser', () =>
@@ -57,16 +57,23 @@ export const loginUserThunk = createAsyncThunk(
   }
 );
 
+export const logoutUserThunk = createAsyncThunk('user/logoutUser', async () => {
+  await logoutApi();
+
+  deleteCookie('accessToken');
+  localStorage.removeItem('refreshToken');
+});
+
 export const registerUserThunk = createAsyncThunk(
-    'user/registerUser',
-    async (data: TRegisterData) => {
-        const response = await registerUserApi(data);
+  'user/registerUser',
+  async (data: TRegisterData) => {
+    const response = await registerUserApi(data);
 
-        setCookie('accessToken', response.accessToken);
-        localStorage.setItem('refreshToken', response.refreshToken);
+    setCookie('accessToken', response.accessToken);
+    localStorage.setItem('refreshToken', response.refreshToken);
 
-        return response;
-    }
+    return response;
+  }
 );
 
 const userSlice = createSlice({
@@ -115,18 +122,23 @@ const userSlice = createSlice({
       state.loginError = action.error.message || 'Ошибка авторизации';
     });
     builder.addCase(registerUserThunk.pending, (state) => {
-        state.isLoading = true;
-        state.registerError = null;
+      state.isLoading = true;
+      state.registerError = null;
     });
     builder.addCase(registerUserThunk.fulfilled, (state, action) => {
-        state.refreshToken = action.payload.refreshToken;
-        state.accessToken = action.payload.accessToken;
-        state.user = action.payload.user;
-        state.isLoading = false;
-    })
+      state.refreshToken = action.payload.refreshToken;
+      state.accessToken = action.payload.accessToken;
+      state.user = action.payload.user;
+      state.isLoading = false;
+    });
     builder.addCase(registerUserThunk.rejected, (state, action) => {
-        state.isLoading = false;
-        state.registerError = action.error.message || 'Ошибка регистрации';
+      state.isLoading = false;
+      state.registerError = action.error.message || 'Ошибка регистрации';
+    });
+    builder.addCase(logoutUserThunk.fulfilled, (state) => {
+      state.user = null;
+      state.accessToken = null;
+      state.refreshToken = null;
     });
   }
 });
@@ -144,6 +156,7 @@ export const selectUpdateUserError = (state: RootState) =>
 
 export const selectLoginError = (state: RootState) => state.user.loginError;
 
-export const selectRegisterError = (state: RootState) => state.user.registerError;
+export const selectRegisterError = (state: RootState) =>
+  state.user.registerError;
 
 export default userSlice.reducer;
