@@ -1,7 +1,7 @@
 import {
   getUserApi,
   loginUserApi,
-  refreshToken,
+  registerUserApi,
   TLoginData,
   TRegisterData,
   updateUserApi
@@ -10,6 +10,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { TUser } from '@utils-types';
 import type { RootState } from '../store';
 import { setCookie } from '../../utils/cookie';
+import { Root } from 'react-dom/client';
 
 type UserState = {
   user: TUser | null;
@@ -20,6 +21,7 @@ type UserState = {
   loadError: string | null;
   updateError: string | null;
   loginError: string | null;
+  registerError: string | null;
 };
 
 const initialState: UserState = {
@@ -30,7 +32,8 @@ const initialState: UserState = {
   accessToken: null,
   loadError: null,
   updateError: null,
-  loginError: null
+  loginError: null,
+  registerError: null,
 };
 
 export const getUserThunk = createAsyncThunk('user/getUser', () =>
@@ -46,9 +49,24 @@ export const loginUserThunk = createAsyncThunk(
   'user/loginUser',
   async (data: TLoginData) => {
     const response = await loginUserApi(data);
+
     setCookie('accessToken', response.accessToken);
+    localStorage.setItem('refreshToken', response.refreshToken);
+
     return response;
   }
+);
+
+export const registerUserThunk = createAsyncThunk(
+    'user/registerUser',
+    async (data: TRegisterData) => {
+        const response = await registerUserApi(data);
+
+        setCookie('accessToken', response.accessToken);
+        localStorage.setItem('refreshToken', response.refreshToken);
+
+        return response;
+    }
 );
 
 const userSlice = createSlice({
@@ -96,6 +114,20 @@ const userSlice = createSlice({
       state.isLoading = false;
       state.loginError = action.error.message || 'Ошибка авторизации';
     });
+    builder.addCase(registerUserThunk.pending, (state) => {
+        state.isLoading = true;
+        state.registerError = null;
+    });
+    builder.addCase(registerUserThunk.fulfilled, (state, action) => {
+        state.refreshToken = action.payload.refreshToken;
+        state.accessToken = action.payload.accessToken;
+        state.user = action.payload.user;
+        state.isLoading = false;
+    })
+    builder.addCase(registerUserThunk.rejected, (state, action) => {
+        state.isLoading = false;
+        state.registerError = action.error.message || 'Ошибка регистрации';
+    });
   }
 });
 
@@ -111,5 +143,7 @@ export const selectUpdateUserError = (state: RootState) =>
   state.user.updateError;
 
 export const selectLoginError = (state: RootState) => state.user.loginError;
+
+export const selectRegisterError = (state: RootState) => state.user.registerError;
 
 export default userSlice.reducer;
