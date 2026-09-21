@@ -1,5 +1,6 @@
 import {
   selectUser,
+  selectUserIsAuthChecked,
   selectUserIsLoading
 } from '../../services/slices/userSlice';
 import { useSelector } from '../../services/store';
@@ -17,17 +18,22 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const user = useSelector(selectUser);
   const isLoading = useSelector(selectUserIsLoading);
+  const isAuthChecked = useSelector(selectUserIsAuthChecked);
 
   if (isLoading) {
     return <Preloader />;
   }
 
+  if (!isAuthChecked) {
+    return <Preloader />;
+  }
+
   if (!onlyUnAuth && !user) {
-    return  <Navigate to='/login' replace />;
+    return <Navigate to='/login' replace />;
   }
 
   if (onlyUnAuth && user) {
-    return  <Navigate to='/' replace />;
+    return <Navigate to='/' replace />;
   }
 
   return children;

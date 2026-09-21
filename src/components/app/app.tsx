@@ -29,7 +29,7 @@ import {
   selectIngredientsError,
   selectIngredientsLoading
 } from '../../services/slices/ingredientsSlice';
-import { getUserThunk } from '../../services/slices/userSlice';
+import { getUserThunk, setAuthChecked } from '../../services/slices/userSlice';
 import { getCookie } from '../../utils/cookie';
 
 const App = () => {
@@ -47,9 +47,10 @@ const App = () => {
 
     if (getCookie('accessToken')) {
       dispatch(getUserThunk());
+    } else {
+      dispatch(setAuthChecked());
     }
   }, [dispatch]);
-  
 
   const isLoading = useSelector(selectIngredientsLoading);
   const error = useSelector(selectIngredientsError);

@@ -14,6 +14,7 @@ import { deleteCookie, setCookie } from '../../utils/cookie';
 
 type UserState = {
   user: TUser | null;
+  isAuthChecked: boolean;
   isLoading: boolean;
   isUpdating: boolean;
   refreshToken: string | null;
@@ -26,6 +27,7 @@ type UserState = {
 
 const initialState: UserState = {
   user: null,
+  isAuthChecked: false,
   isLoading: false,
   isUpdating: false,
   refreshToken: null,
@@ -79,18 +81,25 @@ export const registerUserThunk = createAsyncThunk(
 const userSlice = createSlice({
   name: 'user',
   initialState,
-  reducers: {},
+  reducers: {
+    setAuthChecked(state) {
+      state.isAuthChecked = true;
+    }
+  },
   extraReducers(builder) {
     builder.addCase(getUserThunk.pending, (state) => {
+      state.isAuthChecked = false;
       state.isLoading = true;
       state.loadError = null;
     });
     builder.addCase(getUserThunk.fulfilled, (state, action) => {
+      state.isAuthChecked = true;
       state.user = action.payload.user;
       state.isLoading = false;
       state.loadError = null;
     });
     builder.addCase(getUserThunk.rejected, (state, action) => {
+      state.isAuthChecked = true;
       state.isLoading = false;
       state.loadError = action.error.message || 'Произошла ошибка';
     });
@@ -158,5 +167,10 @@ export const selectLoginError = (state: RootState) => state.user.loginError;
 
 export const selectRegisterError = (state: RootState) =>
   state.user.registerError;
+
+export const selectUserIsAuthChecked = (state: RootState) =>
+  state.user.isAuthChecked;
+
+export const { setAuthChecked } = userSlice.actions;
 
 export default userSlice.reducer;
