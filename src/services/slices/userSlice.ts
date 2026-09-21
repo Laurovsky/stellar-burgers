@@ -9,6 +9,7 @@ import {
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { TUser } from '@utils-types';
 import type { RootState } from '../store';
+import { setCookie } from '../../utils/cookie';
 
 type UserState = {
   user: TUser | null;
@@ -29,7 +30,7 @@ const initialState: UserState = {
   accessToken: null,
   loadError: null,
   updateError: null,
-  loginError: null,
+  loginError: null
 };
 
 export const getUserThunk = createAsyncThunk('user/getUser', () =>
@@ -43,7 +44,11 @@ export const updateUserThunk = createAsyncThunk(
 
 export const loginUserThunk = createAsyncThunk(
   'user/loginUser',
-  (data: TLoginData) => loginUserApi(data)
+  async (data: TLoginData) => {
+    const response = await loginUserApi(data);
+    setCookie('accessToken', response.accessToken);
+    return response;
+  }
 );
 
 const userSlice = createSlice({
@@ -82,14 +87,14 @@ const userSlice = createSlice({
       state.loginError = null;
     });
     builder.addCase(loginUserThunk.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-        state.accessToken = action.payload.accessToken;
-        state.refreshToken = action.payload.refreshToken;
-        state.isLoading = false;
+      state.user = action.payload.user;
+      state.accessToken = action.payload.accessToken;
+      state.refreshToken = action.payload.refreshToken;
+      state.isLoading = false;
     });
     builder.addCase(loginUserThunk.rejected, (state, action) => {
-        state.isLoading = false;
-        state.loginError = action.error.message || 'Ошибка авторизации';
+      state.isLoading = false;
+      state.loginError = action.error.message || 'Ошибка авторизации';
     });
   }
 });
@@ -104,5 +109,7 @@ export const selectUserError = (state: RootState) => state.user.loadError;
 
 export const selectUpdateUserError = (state: RootState) =>
   state.user.updateError;
+
+export const selectLoginError = (state: RootState) => state.user.loginError;
 
 export default userSlice.reducer;
