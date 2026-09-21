@@ -6,21 +6,24 @@ import {
   selectLoginError,
   selectUser
 } from '../../services/slices/userSlice';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export const Login: FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const error = useSelector(selectLoginError);
   const user = useSelector(selectUser);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  const from = location.state?.from?.pathname || '/';
+
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate(from, { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, from, navigate]);
 
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
