@@ -25,7 +25,6 @@ import { useDispatch, useSelector } from '../../services/store';
 import { useEffect } from 'react';
 import {
   getIngredientsThunk,
-  selectIngredients,
   selectIngredientsError,
   selectIngredientsLoading
 } from '../../services/slices/ingredientsSlice';
@@ -34,7 +33,7 @@ import { getCookie } from '../../utils/cookie';
 
 const App = () => {
   const location = useLocation();
-  const backgroundLocation = location.state?.backgroundLocation;
+  const backgroundLocation = location.state?.background;
 
   const navigate = useNavigate();
   const handleCloseModal = () => {
@@ -45,7 +44,7 @@ const App = () => {
   useEffect(() => {
     dispatch(getIngredientsThunk());
 
-    if (getCookie('accessToken')) {
+    if (getCookie('accessToken') || localStorage.getItem('refreshToken')) {
       dispatch(getUserThunk());
     } else {
       dispatch(setAuthChecked());
@@ -54,7 +53,6 @@ const App = () => {
 
   const isLoading = useSelector(selectIngredientsLoading);
   const error = useSelector(selectIngredientsError);
-  const ingredients = useSelector(selectIngredients);
 
   return (
     <div className={styles.app}>

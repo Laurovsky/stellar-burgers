@@ -3,7 +3,12 @@ import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient } from '@utils-types';
 import { useDispatch, useSelector } from '../../services/store';
-import { getOrderByNumberThunk, selectOrderDetail, selectOrderDetailError, selectOrderDetailIsLoading } from '../../services/slices/orderDetailsSlice';
+import {
+  getOrderByNumberThunk,
+  selectOrderDetail,
+  selectOrderDetailError,
+  selectOrderDetailIsLoading
+} from '../../services/slices/orderDetailsSlice';
 import { selectIngredients } from '../../services/slices/ingredientsSlice';
 import { useParams } from 'react-router-dom';
 
@@ -11,7 +16,7 @@ export const OrderInfo: FC = () => {
   const { number } = useParams();
   const dispatch = useDispatch();
 
-  const orderData =  useSelector(selectOrderDetail);
+  const orderData = useSelector(selectOrderDetail);
   const ingredients = useSelector(selectIngredients);
   const isLoading = useSelector(selectOrderDetailIsLoading);
   const error = useSelector(selectOrderDetailError);
@@ -21,10 +26,10 @@ export const OrderInfo: FC = () => {
   useEffect(() => {
     if (!Number.isInteger(orderNumber) || orderNumber <= 0) {
       return;
-    };
-    
+    }
+
     dispatch(getOrderByNumberThunk(orderNumber));
-  },[orderNumber, dispatch])
+  }, [orderNumber, dispatch]);
 
   /* Готовим данные для отображения */
   const orderInfo = useMemo(() => {
@@ -70,14 +75,14 @@ export const OrderInfo: FC = () => {
 
   if (!Number.isInteger(orderNumber) || orderNumber <= 0) {
     return <div>Некорректный номер заказа</div>;
-  };
+  }
 
   if (isLoading) {
     return <Preloader />;
   }
 
   if (error) {
-    return <div>{error}</div>
+    return <div>{error}</div>;
   }
 
   if (!orderInfo) {

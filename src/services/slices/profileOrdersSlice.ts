@@ -15,8 +15,9 @@ const initialState: ProfileOrderState = {
   error: null
 };
 
-export const profileOrdersThunk = createAsyncThunk('profileOrders/getProfileOrders', () =>
-  getOrdersApi()
+export const profileOrdersThunk = createAsyncThunk(
+  'profileOrders/getProfileOrders',
+  () => getOrdersApi()
 );
 
 const profileOrderSlice = createSlice({
@@ -40,8 +41,11 @@ const profileOrderSlice = createSlice({
   }
 });
 
-export const selectProfileOrders = (state: RootState) => state.profileOrders.orders;
-export const selectProfileOrdersIsLoading = (state: RootState) => state.profileOrders.isLoading;
-export const selectProfileOrdersError = (state: RootState) => state.profileOrders.error;
+export const selectProfileOrders = (state: RootState) =>
+  state.profileOrders.orders;
+export const selectProfileOrdersIsLoading = (state: RootState) =>
+  state.profileOrders.isLoading;
+export const selectProfileOrdersError = (state: RootState) =>
+  state.profileOrders.error;
 
 export default profileOrderSlice.reducer;
