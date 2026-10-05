@@ -1,0 +1,176 @@
+import {
+  getUserApi,
+  loginUserApi,
+  logoutApi,
+  registerUserApi,
+  TLoginData,
+  TRegisterData,
+  updateUserApi
+} from '@api';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { TUser } from '@utils-types';
+import type { RootState } from '../store';
+import { deleteCookie, setCookie } from '../../utils/cookie';
+
+type UserState = {
+  user: TUser | null;
+  isAuthChecked: boolean;
+  isLoading: boolean;
+  isUpdating: boolean;
+  refreshToken: string | null;
+  accessToken: string | null;
+  loadError: string | null;
+  updateError: string | null;
+  loginError: string | null;
+  registerError: string | null;
+};
+
+const initialState: UserState = {
+  user: null,
+  isAuthChecked: false,
+  isLoading: false,
+  isUpdating: false,
+  refreshToken: null,
+  accessToken: null,
+  loadError: null,
+  updateError: null,
+  loginError: null,
+  registerError: null
+};
+
+export const getUserThunk = createAsyncThunk('user/getUser', () =>
+  getUserApi()
+);
+
+export const updateUserThunk = createAsyncThunk(
+  'user/updateUser',
+  (user: Partial<TRegisterData>) => updateUserApi(user)
+);
+
+export const loginUserThunk = createAsyncThunk(
+  'user/loginUser',
+  async (data: TLoginData) => {
+    const response = await loginUserApi(data);
+
+    setCookie('accessToken', response.accessToken);
+    localStorage.setItem('refreshToken', response.refreshToken);
+
+    return response;
+  }
+);
+
+export const logoutUserThunk = createAsyncThunk('user/logoutUser', async () => {
+  await logoutApi();
+
+  deleteCookie('accessToken');
+  localStorage.removeItem('refreshToken');
+});
+
+export const registerUserThunk = createAsyncThunk(
+  'user/registerUser',
+  async (data: TRegisterData) => {
+    const response = await registerUserApi(data);
+
+    setCookie('accessToken', response.accessToken);
+    localStorage.setItem('refreshToken', response.refreshToken);
+
+    return response;
+  }
+);
+
+const userSlice = createSlice({
+  name: 'user',
+  initialState,
+  reducers: {
+    setAuthChecked(state) {
+      state.isAuthChecked = true;
+    }
+  },
+  extraReducers(builder) {
+    builder.addCase(getUserThunk.pending, (state) => {
+      state.isAuthChecked = false;
+      state.isLoading = true;
+      state.loadError = null;
+    });
+    builder.addCase(getUserThunk.fulfilled, (state, action) => {
+      state.isAuthChecked = true;
+      state.user = action.payload.user;
+      state.isLoading = false;
+      state.loadError = null;
+    });
+    builder.addCase(getUserThunk.rejected, (state, action) => {
+      state.isAuthChecked = true;
+      state.isLoading = false;
+      state.loadError = action.error.message || 'Произошла ошибка';
+    });
+    builder.addCase(updateUserThunk.pending, (state) => {
+      state.isUpdating = true;
+      state.updateError = null;
+    });
+    builder.addCase(updateUserThunk.fulfilled, (state, action) => {
+      state.user = action.payload.user;
+      state.isUpdating = false;
+      state.updateError = null;
+    });
+    builder.addCase(updateUserThunk.rejected, (state, action) => {
+      state.isUpdating = false;
+      state.updateError = action.error.message || 'Не удалось обновить профиль';
+    });
+    builder.addCase(loginUserThunk.pending, (state) => {
+      state.isLoading = true;
+      state.loginError = null;
+    });
+    builder.addCase(loginUserThunk.fulfilled, (state, action) => {
+      state.user = action.payload.user;
+      state.accessToken = action.payload.accessToken;
+      state.refreshToken = action.payload.refreshToken;
+      state.isLoading = false;
+    });
+    builder.addCase(loginUserThunk.rejected, (state, action) => {
+      state.isLoading = false;
+      state.loginError = action.error.message || 'Ошибка авторизации';
+    });
+    builder.addCase(registerUserThunk.pending, (state) => {
+      state.isLoading = true;
+      state.registerError = null;
+    });
+    builder.addCase(registerUserThunk.fulfilled, (state, action) => {
+      state.refreshToken = action.payload.refreshToken;
+      state.accessToken = action.payload.accessToken;
+      state.user = action.payload.user;
+      state.isLoading = false;
+    });
+    builder.addCase(registerUserThunk.rejected, (state, action) => {
+      state.isLoading = false;
+      state.registerError = action.error.message || 'Ошибка регистрации';
+    });
+    builder.addCase(logoutUserThunk.fulfilled, (state) => {
+      state.user = null;
+      state.accessToken = null;
+      state.refreshToken = null;
+    });
+  }
+});
+
+export const selectUser = (state: RootState) => state.user.user;
+
+export const selectUserIsLoading = (state: RootState) => state.user.isLoading;
+
+export const selectUserIsUpdating = (state: RootState) => state.user.isUpdating;
+
+export const selectUserError = (state: RootState) => state.user.loadError;
+
+export const selectUpdateUserError = (state: RootState) =>
+  state.user.updateError;
+
+export const selectLoginError = (state: RootState) => state.user.loginError;
+
+export const selectRegisterError = (state: RootState) =>
+  state.user.registerError;
+
+export const selectUserIsAuthChecked = (state: RootState) =>
+  state.user.isAuthChecked;
+
+export const { setAuthChecked } = userSlice.actions;
+
+export default userSlice.reducer;
