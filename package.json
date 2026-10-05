@@ -92,7 +92,8 @@
     "lint:fix": "npm run lint -- --fix",
     "format": "prettier ./src --write",
     "e2e": "npx playwright test",
-    "e2e:ui": "npx playwright test --ui"
+    "e2e:ui": "npx playwright test --ui",
+    "test": "jest"
   },
   "eslintConfig": {
     "extends": [
