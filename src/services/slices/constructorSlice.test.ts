@@ -21,9 +21,6 @@ describe('burgerConstructor reducer', () => {
       bun: null,
       ingredients: []
     });
-  });
-
-  test('сохраняет состояние для неизвестного экшена', () => {
     const state = filledState();
     expect(constructorReducer(state, { type: 'UNKNOWN' })).toBe(state);
   });

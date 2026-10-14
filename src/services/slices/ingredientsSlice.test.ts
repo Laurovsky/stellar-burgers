@@ -2,11 +2,14 @@ import ingredientsReducer, { getIngredientsThunk } from './ingredientsSlice';
 import { bun, filling } from './__tests__/fixtures';
 
 describe('ingredients reducer', () => {
-  test('сохраняет ингредиенты при начале повторной загрузки', () => {
-    const state = { ingredients: [bun], isLoading: false, error: 'Ошибка' };
+  test.each([
+    { name: 'пустой список', ingredients: [] },
+    { name: 'загруженный список', ingredients: [bun] }
+  ])('pending включает загрузку и очищает ошибку: $name', ({ ingredients }) => {
+    const state = { ingredients, isLoading: false, error: 'Старая ошибка' };
     expect(
       ingredientsReducer(state, getIngredientsThunk.pending('request-id'))
-    ).toEqual({ ingredients: [bun], isLoading: true, error: null });
+    ).toEqual({ ingredients, isLoading: true, error: null });
   });
 
   test('заменяет ингредиенты, выключает загрузку и очищает ошибку при fulfilled', () => {
@@ -59,24 +62,6 @@ describe('ingredients reducer', () => {
     expect(result).toEqual({
       ingredients: [],
       isLoading: false,
-      error: null
-    });
-  });
-
-  test('включает загрузку при начале запроса ингредиентов', () => {
-    const state = {
-      ingredients: [],
-      isLoading: false,
-      error: 'Старая ошибка'
-    };
-
-    const action = getIngredientsThunk.pending('request-id', undefined);
-
-    const result = ingredientsReducer(state, action);
-
-    expect(result).toEqual({
-      ingredients: [],
-      isLoading: true,
       error: null
     });
   });
